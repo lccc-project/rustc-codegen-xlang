@@ -1,4 +1,4 @@
-#![feature(rustc_private)]
+#![feature(lazy_cell, rustc_private)]
 
 extern crate rustc_ast;
 extern crate rustc_codegen_ssa;
@@ -16,16 +16,16 @@ mod buffers;
 mod module;
 
 use buffers::{ModuleBuffer, ThinBuffer};
+use xlang::{ir, plugin::XLangPlugin, targets::Target};
 use core::any::Any;
 use module::Module;
-use parking_lot::RwLock;
 use rustc_ast::expand::allocator::AllocatorKind;
 use rustc_codegen_ssa::back::lto::{LtoModuleCodegen, SerializedModule, ThinModule};
 use rustc_codegen_ssa::back::write::{
-    CodegenContext, FatLTOInput, ModuleConfig, TargetMachineFactoryFn,
+    CodegenContext, EmitObj, FatLTOInput, ModuleConfig, OngoingCodegen, TargetMachineFactoryFn,
 };
 use rustc_codegen_ssa::traits::{CodegenBackend, ExtraBackendMethods, WriteBackendMethods};
-use rustc_codegen_ssa::{CodegenResults, CompiledModule, ModuleCodegen};
+use rustc_codegen_ssa::{CodegenResults, CompiledModule, ModuleCodegen, ModuleKind};
 use rustc_errors::{FatalError, Handler, SubdiagnosticMessage};
 use rustc_hash::FxHashMap;
 use rustc_macros::fluent_messages;
@@ -33,27 +33,18 @@ use rustc_metadata::EncodedMetadata;
 use rustc_middle::dep_graph::{WorkProduct, WorkProductId};
 use rustc_middle::ty::query::Providers;
 use rustc_middle::ty::TyCtxt;
-use rustc_session::config::{OptLevel, OutputFilenames};
+use rustc_session::config::{OptLevel, OutputFilenames, OutputType};
 use rustc_session::Session;
 use rustc_span::{ErrorGuaranteed, Symbol};
-use std::sync::Arc;
-use xlang::abi::traits::DynBox;
-use xlang::host::rustcall;
-use xlang::plugin::XLangCodegen;
-
-#[derive(Default)]
-pub struct XlangCodegenState {}
+use std::{sync::Arc, fs::File};
+use xlang::abi::collection::HashMap as AbiHashMap;
 
 #[derive(Clone, Default)]
-pub struct XlangCodegenBackend {
-    state: Arc<RwLock<XlangCodegenState>>,
-}
+pub struct XLangCodegenBackend {}
 
 fluent_messages! { "../locale/en_US.ftl" }
 
-type CodegenInit = rustcall!(extern "rustcall" fn() -> DynBox<dyn XLangCodegen>);
-
-impl CodegenBackend for XlangCodegenBackend {
+impl CodegenBackend for XLangCodegenBackend {
     fn locale_resource(&self) -> &'static str {
         crate::DEFAULT_LOCALE_RESOURCE
     }
@@ -75,11 +66,15 @@ impl CodegenBackend for XlangCodegenBackend {
 
     fn join_codegen(
         &self,
-        _ongoing_codegen: Box<dyn Any>,
-        _sess: &Session,
+        ongoing_codegen: Box<dyn Any>,
+        sess: &Session,
         _outputs: &OutputFilenames,
     ) -> Result<(CodegenResults, FxHashMap<WorkProductId, WorkProduct>), ErrorGuaranteed> {
-        todo!()
+        let (codegen_results, work_products) = ongoing_codegen
+            .downcast::<OngoingCodegen<XLangCodegenBackend>>()
+            .expect("Expected XlangCodegenBackend's OngoingCodegen, found Box<Any>")
+            .join(sess);
+        Ok((codegen_results, work_products))
     }
 
     fn link(
@@ -101,7 +96,7 @@ impl CodegenBackend for XlangCodegenBackend {
     }
 }
 
-impl ExtraBackendMethods for XlangCodegenBackend {
+impl ExtraBackendMethods for XLangCodegenBackend {
     fn codegen_allocator<'tcx>(
         &self,
         _tcx: TyCtxt<'tcx>,
@@ -109,16 +104,34 @@ impl ExtraBackendMethods for XlangCodegenBackend {
         _kind: AllocatorKind,
         _alloc_error_handler_kind: AllocatorKind,
     ) -> Module {
-        let module = Module::new(&self.state);
+        let module = Module::new();
         module
     }
 
     fn compile_codegen_unit(
         &self,
-        _tcx: TyCtxt<'_>,
-        _cgu_name: Symbol,
+        tcx: TyCtxt<'_>,
+        cgu_name: Symbol,
     ) -> (ModuleCodegen<Module>, u64) {
-        todo!()
+        let dep_node = tcx.codegen_unit(cgu_name).codegen_dep_node(tcx);
+        let (module, _) = tcx.dep_graph.with_task(
+            dep_node,
+            tcx,
+            cgu_name,
+            module_codegen,
+            Some(rustc_middle::dep_graph::hash_result),
+        );
+        fn module_codegen(tcx: TyCtxt<'_>, cgu_name: Symbol) -> ModuleCodegen<Module> {
+            let _cgu = tcx.codegen_unit(cgu_name);
+            let module = Module::new();
+
+            ModuleCodegen {
+                name: cgu_name.to_string(),
+                module_llvm: module, // Not LLVM
+                kind: ModuleKind::Regular,
+            }
+        }
+        (module, 0)
     }
 
     fn target_machine_factory(
@@ -131,7 +144,7 @@ impl ExtraBackendMethods for XlangCodegenBackend {
     }
 }
 
-impl WriteBackendMethods for XlangCodegenBackend {
+impl WriteBackendMethods for XLangCodegenBackend {
     type Module = Module;
     type TargetMachine = ();
     type TargetMachineError = ();
@@ -142,23 +155,23 @@ impl WriteBackendMethods for XlangCodegenBackend {
     fn run_link(
         _cgcx: &CodegenContext<Self>,
         _diag_handler: &Handler,
-        _modules: Vec<ModuleCodegen<Self::Module>>,
-    ) -> Result<ModuleCodegen<Self::Module>, FatalError> {
+        _modules: Vec<ModuleCodegen<Module>>,
+    ) -> Result<ModuleCodegen<Module>, FatalError> {
         todo!()
     }
 
     fn run_fat_lto(
         _cgcx: &CodegenContext<Self>,
         _modules: Vec<FatLTOInput<Self>>,
-        _cached_modules: Vec<(SerializedModule<Self::ModuleBuffer>, WorkProduct)>,
+        _cached_modules: Vec<(SerializedModule<ModuleBuffer>, WorkProduct)>,
     ) -> Result<LtoModuleCodegen<Self>, FatalError> {
         todo!()
     }
 
     fn run_thin_lto(
         _cgcx: &CodegenContext<Self>,
-        _modules: Vec<(String, Self::ThinBuffer)>,
-        _cached_modules: Vec<(SerializedModule<Self::ModuleBuffer>, WorkProduct)>,
+        _modules: Vec<(String, ThinBuffer)>,
+        _cached_modules: Vec<(SerializedModule<ModuleBuffer>, WorkProduct)>,
     ) -> Result<(Vec<LtoModuleCodegen<Self>>, Vec<WorkProduct>), FatalError> {
         todo!()
     }
@@ -170,15 +183,15 @@ impl WriteBackendMethods for XlangCodegenBackend {
     unsafe fn optimize(
         _cgcx: &CodegenContext<Self>,
         _diag_handler: &Handler,
-        _module: &ModuleCodegen<Self::Module>,
+        _module: &ModuleCodegen<Module>,
         _config: &ModuleConfig,
     ) -> Result<(), FatalError> {
-        todo!()
+        Ok(())
     }
 
     fn optimize_fat(
         _cgcx: &CodegenContext<Self>,
-        _llmod: &mut ModuleCodegen<Self::Module>,
+        _llmod: &mut ModuleCodegen<Module>,
     ) -> Result<(), FatalError> {
         todo!()
     }
@@ -186,29 +199,57 @@ impl WriteBackendMethods for XlangCodegenBackend {
     unsafe fn optimize_thin(
         _cgcx: &CodegenContext<Self>,
         _thin: ThinModule<Self>,
-    ) -> Result<ModuleCodegen<Self::Module>, FatalError> {
+    ) -> Result<ModuleCodegen<Module>, FatalError> {
         todo!()
     }
 
     unsafe fn codegen(
-        _cgcx: &CodegenContext<Self>,
+        cgcx: &CodegenContext<Self>,
         _diag_handler: &Handler,
-        _module: ModuleCodegen<Self::Module>,
-        _config: &ModuleConfig,
+        mut module: ModuleCodegen<Module>,
+        config: &ModuleConfig,
     ) -> Result<CompiledModule, FatalError> {
+        let module_name = module.name.clone();
+        let module_name = Some(&module_name[..]);
+        let obj_out = cgcx.output_filenames.temp_path(OutputType::Object, module_name);
+        let xlang_module = &mut module.module_llvm;
+        let root = ir::Scope {
+            annotations: ir::AnnotatedElement::default(),
+            members: AbiHashMap::default(),
+        };
+        let target: Target = target_tuples::Target::parse("x86_64-pc-linux-gnu").into();
+        let mut file = ir::File {
+            target: target.clone(),
+            root,
+        };
+        match config.emit_obj {
+            EmitObj::ObjectCode(_) => {
+                xlang_module.codegen.set_target(target);
+                xlang_module.codegen.accept_ir(&mut file);
+                xlang_module.write(File::create(obj_out).unwrap());
+            }
+            EmitObj::Bitcode => todo!(),
+            EmitObj::None => {}
+        }
+
+        Ok(module.into_compiled_module(
+            config.emit_obj != EmitObj::None,
+            false,
+            config.emit_bc,
+            &cgcx.output_filenames,
+        ))
+    }
+
+    fn prepare_thin(_module: ModuleCodegen<Module>) -> (String, ThinBuffer) {
         todo!()
     }
 
-    fn prepare_thin(_module: ModuleCodegen<Self::Module>) -> (String, Self::ThinBuffer) {
-        todo!()
-    }
-
-    fn serialize_module(_module: ModuleCodegen<Self::Module>) -> (String, Self::ModuleBuffer) {
+    fn serialize_module(_module: ModuleCodegen<Module>) -> (String, ModuleBuffer) {
         todo!()
     }
 }
 
 #[no_mangle]
 pub fn __rustc_codegen_backend() -> Box<dyn CodegenBackend> {
-    Box::<XlangCodegenBackend>::default()
+    Box::<XLangCodegenBackend>::default()
 }

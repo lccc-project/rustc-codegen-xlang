@@ -12,3 +12,6 @@ parking_lot = "0.12.1"
 target-tuples = "0.5"
 xlang = { git = "https://github.com/LightningCreations/lccc" }
 xlang_interface = "0.1"
+
+[package.metadata.rust-analyzer]
+rustc_private = true
