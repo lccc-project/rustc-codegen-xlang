@@ -1,0 +1,328 @@
+   Compiling compiler_builtins v0.1.91
+   Compiling core v0.0.0 (/home/rdrpenguin/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core)
+   Compiling libc v0.2.140
+   Compiling cc v1.0.77
+   Compiling memchr v2.5.0
+   Compiling std v0.0.0 (/home/rdrpenguin/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std)
+   Compiling unwind v0.0.0 (/home/rdrpenguin/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/unwind)
+   Compiling rustc-std-workspace-core v1.99.0 (/home/rdrpenguin/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/rustc-std-workspace-core)
+[src/lib.rs:93] outputs = OutputFilenames {
+    out_directory: "/home/rdrpenguin/rustc-codegen-xlang/build-std/target/x86_64-unknown-linux-gnu/debug/deps",
+    filestem: "rustc_std_workspace_core-22c3c01c1aa4f972",
+    single_output_file: None,
+    temps_directory: None,
+    outputs: OutputTypes(
+        {
+            Metadata: None,
+            Exe: None,
+            DepInfo: None,
+        },
+    ),
+}
+[src/lib.rs:121] "xlang: codegen loaded" = "xlang: codegen loaded"
+[src/lib.rs:93] outputs = OutputFilenames {
+    out_directory: "/home/rdrpenguin/rustc-codegen-xlang/build-std/target/x86_64-unknown-linux-gnu/debug/deps",
+    filestem: "core-f7b891ffed93e09f",
+    single_output_file: None,
+    temps_directory: None,
+    outputs: OutputTypes(
+        {
+            Metadata: None,
+            Exe: None,
+            DepInfo: None,
+        },
+    ),
+}
+[src/lib.rs:121] "xlang: codegen loaded" = "xlang: codegen loaded"
+   Compiling alloc v0.0.0 (/home/rdrpenguin/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/alloc)
+   Compiling cfg-if v1.0.0
+   Compiling adler v1.0.2
+   Compiling rustc-demangle v0.1.21
+[src/lib.rs:93] outputs = OutputFilenames {
+    out_directory: "/home/rdrpenguin/rustc-codegen-xlang/build-std/target/x86_64-unknown-linux-gnu/debug/deps",
+    filestem: "compiler_builtins-abb5799f979fb4b9",
+    single_output_file: None,
+    temps_directory: None,
+    outputs: OutputTypes(
+        {
+            Metadata: None,
+            Exe: None,
+            DepInfo: None,
+        },
+    ),
+}
+[src/lib.rs:121] "xlang: codegen loaded" = "xlang: codegen loaded"
+[src/lib.rs:93] outputs = OutputFilenames {
+    out_directory: "/home/rdrpenguin/rustc-codegen-xlang/build-std/target/x86_64-unknown-linux-gnu/debug/deps",
+    filestem: "cfg_if-cf63818577e51f05",
+    single_output_file: None,
+    temps_directory: None,
+    outputs: OutputTypes(
+        {
+            Metadata: None,
+            Exe: None,
+            DepInfo: None,
+        },
+    ),
+}
+[src/lib.rs:121] "xlang: codegen loaded" = "xlang: codegen loaded"
+[src/lib.rs:93] outputs = OutputFilenames {
+    out_directory: "/home/rdrpenguin/rustc-codegen-xlang/build-std/target/x86_64-unknown-linux-gnu/debug/deps",
+    filestem: "adler-3869b2d93fefec4f",
+    single_output_file: None,
+    temps_directory: None,
+    outputs: OutputTypes(
+        {
+            Metadata: None,
+            Exe: None,
+            DepInfo: None,
+        },
+    ),
+}
+[src/lib.rs:121] "xlang: codegen loaded" = "xlang: codegen loaded"
+[src/lib.rs:93] outputs = OutputFilenames {
+    out_directory: "/home/rdrpenguin/rustc-codegen-xlang/build-std/target/x86_64-unknown-linux-gnu/debug/deps",
+    filestem: "libc-83ed1779d4591e31",
+    single_output_file: None,
+    temps_directory: None,
+    outputs: OutputTypes(
+        {
+            Metadata: None,
+            Exe: None,
+            DepInfo: None,
+        },
+    ),
+}
+[src/lib.rs:121] "xlang: codegen loaded" = "xlang: codegen loaded"
+[src/lib.rs:93] outputs = OutputFilenames {
+    out_directory: "/home/rdrpenguin/rustc-codegen-xlang/build-std/target/x86_64-unknown-linux-gnu/debug/deps",
+    filestem: "unwind-d702ea994808c4f8",
+    single_output_file: None,
+    temps_directory: None,
+    outputs: OutputTypes(
+        {
+            Metadata: None,
+            Exe: None,
+            DepInfo: None,
+        },
+    ),
+}
+[src/lib.rs:121] "xlang: codegen loaded" = "xlang: codegen loaded"
+[src/lib.rs:93] outputs = OutputFilenames {
+    out_directory: "/home/rdrpenguin/rustc-codegen-xlang/build-std/target/x86_64-unknown-linux-gnu/debug/deps",
+    filestem: "memchr-8628c78d05b2691c",
+    single_output_file: None,
+    temps_directory: None,
+    outputs: OutputTypes(
+        {
+            Metadata: None,
+            Exe: None,
+            DepInfo: None,
+        },
+    ),
+}
+[src/lib.rs:121] "xlang: codegen loaded" = "xlang: codegen loaded"
+[src/lib.rs:93] outputs = OutputFilenames {
+    out_directory: "/home/rdrpenguin/rustc-codegen-xlang/build-std/target/x86_64-unknown-linux-gnu/debug/deps",
+    filestem: "rustc_demangle-7ef294f5dac2ff06",
+    single_output_file: None,
+    temps_directory: None,
+    outputs: OutputTypes(
+        {
+            Metadata: None,
+            Exe: None,
+            DepInfo: None,
+        },
+    ),
+}
+[src/lib.rs:121] "xlang: codegen loaded" = "xlang: codegen loaded"
+   Compiling rustc-std-workspace-alloc v1.99.0 (/home/rdrpenguin/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/rustc-std-workspace-alloc)
+   Compiling panic_abort v0.0.0 (/home/rdrpenguin/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/panic_abort)
+   Compiling panic_unwind v0.0.0 (/home/rdrpenguin/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/panic_unwind)
+[src/lib.rs:93] outputs = OutputFilenames {
+    out_directory: "/home/rdrpenguin/rustc-codegen-xlang/build-std/target/x86_64-unknown-linux-gnu/debug/deps",
+    filestem: "alloc-3e95eb564dd29168",
+    single_output_file: None,
+    temps_directory: None,
+    outputs: OutputTypes(
+        {
+            Metadata: None,
+            Exe: None,
+            DepInfo: None,
+        },
+    ),
+}
+[src/lib.rs:121] "xlang: codegen loaded" = "xlang: codegen loaded"
+   Compiling gimli v0.26.2
+[src/lib.rs:93] outputs = OutputFilenames {
+   Compiling miniz_oxide v0.5.3
+   Compiling hashbrown v0.12.3
+   Compiling object v0.29.0
+   Compiling std_detect v0.1.5 (/home/rdrpenguin/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/stdarch/crates/std_detect)
+    out_directory: "/home/rdrpenguin/rustc-codegen-xlang/build-std/target/x86_64-unknown-linux-gnu/debug/deps",
+    filestem: "rustc_std_workspace_alloc-1619ba05e2db5df1",
+    single_output_file: None,
+    temps_directory: None,
+    outputs: OutputTypes(
+        {
+            Metadata: None,
+            Exe: None,
+            DepInfo: None,
+        },
+    ),
+}
+[src/lib.rs:121] "xlang: codegen loaded" = "xlang: codegen loaded"
+[src/lib.rs:93] outputs = OutputFilenames {
+    out_directory: "/home/rdrpenguin/rustc-codegen-xlang/build-std/target/x86_64-unknown-linux-gnu/debug/deps",
+    filestem: "panic_abort-b12c257e193b9d10",
+    single_output_file: None,
+    temps_directory: None,
+    outputs: OutputTypes(
+        {
+            Metadata: None,
+            Exe: None,
+            DepInfo: None,
+        },
+    ),
+}
+[src/lib.rs:121] "xlang: codegen loaded" = "xlang: codegen loaded"
+[src/lib.rs:93] outputs = OutputFilenames {
+    out_directory: "/home/rdrpenguin/rustc-codegen-xlang/build-std/target/x86_64-unknown-linux-gnu/debug/deps",
+    filestem: "panic_unwind-2665ca959c6aa843",
+    single_output_file: None,
+    temps_directory: None,
+    outputs: OutputTypes(
+        {
+            Metadata: None,
+            Exe: None,
+            DepInfo: None,
+        },
+    ),
+}
+[src/lib.rs:121] "xlang: codegen loaded" = "xlang: codegen loaded"
+[src/lib.rs:93] outputs = OutputFilenames {
+    out_directory: "/home/rdrpenguin/rustc-codegen-xlang/build-std/target/x86_64-unknown-linux-gnu/debug/deps",
+    filestem: "std_detect-09c79e79e9936e54",
+    single_output_file: None,
+    temps_directory: None,
+    outputs: OutputTypes(
+        {
+            Metadata: None,
+            Exe: None,
+            DepInfo: None,
+        },
+    ),
+}
+[src/lib.rs:121] "xlang: codegen loaded" = "xlang: codegen loaded"
+[src/lib.rs:93] outputs = OutputFilenames {
+    out_directory: "/home/rdrpenguin/rustc-codegen-xlang/build-std/target/x86_64-unknown-linux-gnu/debug/deps",
+    filestem: "miniz_oxide-9626b0e25556b759",
+    single_output_file: None,
+    temps_directory: None,
+    outputs: OutputTypes(
+        {
+            Metadata: None,
+            Exe: None,
+            DepInfo: None,
+        },
+    ),
+}
+[src/lib.rs:121] "xlang: codegen loaded" = "xlang: codegen loaded"
+[src/lib.rs:93] outputs = OutputFilenames {
+    out_directory: "/home/rdrpenguin/rustc-codegen-xlang/build-std/target/x86_64-unknown-linux-gnu/debug/deps",
+    filestem: "hashbrown-5cc453eeb72d964a",
+    single_output_file: None,
+    temps_directory: None,
+    outputs: OutputTypes(
+        {
+            Metadata: None,
+            Exe: None,
+            DepInfo: None,
+        },
+    ),
+}
+[src/lib.rs:121] "xlang: codegen loaded" = "xlang: codegen loaded"
+   Compiling addr2line v0.17.0
+[src/lib.rs:93] outputs = OutputFilenames {
+    out_directory: "/home/rdrpenguin/rustc-codegen-xlang/build-std/target/x86_64-unknown-linux-gnu/debug/deps",
+    filestem: "gimli-22923d8f3086a231",
+    single_output_file: None,
+    temps_directory: None,
+    outputs: OutputTypes(
+        {
+            Metadata: None,
+            Exe: None,
+            DepInfo: None,
+        },
+    ),
+}
+[src/lib.rs:121] "xlang: codegen loaded" = "xlang: codegen loaded"
+[src/lib.rs:93] outputs = OutputFilenames {
+    out_directory: "/home/rdrpenguin/rustc-codegen-xlang/build-std/target/x86_64-unknown-linux-gnu/debug/deps",
+    filestem: "addr2line-876140cda805a0a0",
+    single_output_file: None,
+    temps_directory: None,
+    outputs: OutputTypes(
+        {
+            Metadata: None,
+            Exe: None,
+            DepInfo: None,
+        },
+    ),
+}
+[src/lib.rs:121] "xlang: codegen loaded" = "xlang: codegen loaded"
+[src/lib.rs:93] outputs = OutputFilenames {
+    out_directory: "/home/rdrpenguin/rustc-codegen-xlang/build-std/target/x86_64-unknown-linux-gnu/debug/deps",
+    filestem: "object-1561da1be6298cfe",
+    single_output_file: None,
+    temps_directory: None,
+    outputs: OutputTypes(
+        {
+            Metadata: None,
+            Exe: None,
+            DepInfo: None,
+        },
+    ),
+}
+[src/lib.rs:121] "xlang: codegen loaded" = "xlang: codegen loaded"
+   Compiling proc_macro v0.0.0 (/home/rdrpenguin/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/proc_macro)
+[src/lib.rs:93] outputs = OutputFilenames {
+    out_directory: "/home/rdrpenguin/rustc-codegen-xlang/build-std/target/x86_64-unknown-linux-gnu/debug/deps",
+    filestem: "std-40ab07b2160380c4",
+    single_output_file: None,
+    temps_directory: None,
+    outputs: OutputTypes(
+        {
+            Metadata: None,
+            Exe: None,
+            DepInfo: None,
+        },
+    ),
+}
+[src/lib.rs:121] "xlang: codegen loaded" = "xlang: codegen loaded"
+[src/lib.rs:93] outputs = OutputFilenames {
+    out_directory: "/home/rdrpenguin/rustc-codegen-xlang/build-std/target/x86_64-unknown-linux-gnu/debug/deps",
+    filestem: "proc_macro-3d43245f496d8422",
+    single_output_file: None,
+    temps_directory: None,
+    outputs: OutputTypes(
+        {
+            Metadata: None,
+            Exe: None,
+            DepInfo: None,
+        },
+    ),
+}
+[src/lib.rs:121] "xlang: codegen loaded" = "xlang: codegen loaded"
+   Compiling sysroot v0.0.0 (/home/rdrpenguin/rustc-codegen-xlang/build-std)
+error: extern location for std does not exist: /home/rdrpenguin/rustc-codegen-xlang/build-std/target/x86_64-unknown-linux-gnu/debug/deps/libstd-40ab07b2160380c4.rlib
+
+error: cannot find macro `println` in this scope
+ --> src/main.rs:2:5
+  |
+2 |     println!("Hello, world!");
+  |     ^^^^^^^
+
+error: requires `sized` lang_item
+
+error: could not compile `sysroot` (bin "sysroot") due to 3 previous errors

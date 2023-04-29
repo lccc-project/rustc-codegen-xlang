@@ -1,0 +1,14 @@
+[package]
+name = "rustc_codegen_xlang"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+binfmt = { git = "https://github.com/LightningCreations/lc-binutils", features = ["ar"] }
+parking_lot = "0.12.1"
+target-tuples = "0.5"
+xlang = { git = "https://github.com/LightningCreations/lccc" }
+xlang_interface = "0.1"
