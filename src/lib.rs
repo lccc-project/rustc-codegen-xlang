@@ -1,30 +1,37 @@
 #![feature(lazy_cell, rustc_private)]
 
+extern crate rustc_abi;
 extern crate rustc_ast;
 extern crate rustc_codegen_ssa;
+extern crate rustc_const_eval;
 extern crate rustc_driver;
 extern crate rustc_errors;
 extern crate rustc_hash;
+extern crate rustc_hir;
 extern crate rustc_macros;
 extern crate rustc_metadata;
 extern crate rustc_middle;
 extern crate rustc_session;
 extern crate rustc_span;
+extern crate rustc_target;
 
 mod archive;
 mod buffers;
+mod builder;
+mod cx;
 mod module;
+mod value;
 
-use buffers::{ModuleBuffer, ThinBuffer};
-use xlang::{ir, plugin::XLangPlugin, targets::Target};
 use core::any::Any;
-use module::Module;
 use rustc_ast::expand::allocator::AllocatorKind;
-use rustc_codegen_ssa::back::lto::{LtoModuleCodegen, SerializedModule, ThinModule};
 use rustc_codegen_ssa::back::write::{
     CodegenContext, EmitObj, FatLTOInput, ModuleConfig, OngoingCodegen, TargetMachineFactoryFn,
 };
 use rustc_codegen_ssa::traits::{CodegenBackend, ExtraBackendMethods, WriteBackendMethods};
+use rustc_codegen_ssa::{
+    back::lto::{LtoModuleCodegen, SerializedModule, ThinModule},
+    mono_item::MonoItemExt,
+};
 use rustc_codegen_ssa::{CodegenResults, CompiledModule, ModuleCodegen, ModuleKind};
 use rustc_errors::{FatalError, Handler, SubdiagnosticMessage};
 use rustc_hash::FxHashMap;
@@ -36,8 +43,14 @@ use rustc_middle::ty::TyCtxt;
 use rustc_session::config::{OptLevel, OutputFilenames, OutputType};
 use rustc_session::Session;
 use rustc_span::{ErrorGuaranteed, Symbol};
-use std::{sync::Arc, fs::File};
-use xlang::abi::collection::HashMap as AbiHashMap;
+use rustc_target::spec::HasTargetSpec;
+use std::{fs::File, sync::Arc};
+
+use buffers::{ModuleBuffer, ThinBuffer};
+use cx::CodegenCx;
+use module::Module;
+
+use crate::builder::Builder;
 
 #[derive(Clone, Default)]
 pub struct XLangCodegenBackend {}
@@ -53,14 +66,14 @@ impl CodegenBackend for XLangCodegenBackend {
         &self,
         tcx: TyCtxt<'_>,
         metadata: EncodedMetadata,
-        need_metadata_modules: bool,
+        need_metadata_module: bool,
     ) -> Box<dyn Any> {
         Box::new(rustc_codegen_ssa::base::codegen_crate(
             self.clone(),
             tcx,
             "x86_64-unknown-linux-gnu".into(),
             metadata,
-            need_metadata_modules,
+            need_metadata_module,
         ))
     }
 
@@ -99,12 +112,12 @@ impl CodegenBackend for XLangCodegenBackend {
 impl ExtraBackendMethods for XLangCodegenBackend {
     fn codegen_allocator<'tcx>(
         &self,
-        _tcx: TyCtxt<'tcx>,
+        tcx: TyCtxt<'tcx>,
         _module_name: &str,
         _kind: AllocatorKind,
         _alloc_error_handler_kind: AllocatorKind,
     ) -> Module {
-        let module = Module::new();
+        let module = Module::new(target_tuples::Target::parse(&tcx.target_spec().llvm_target));
         module
     }
 
@@ -122,8 +135,19 @@ impl ExtraBackendMethods for XLangCodegenBackend {
             Some(rustc_middle::dep_graph::hash_result),
         );
         fn module_codegen(tcx: TyCtxt<'_>, cgu_name: Symbol) -> ModuleCodegen<Module> {
-            let _cgu = tcx.codegen_unit(cgu_name);
-            let module = Module::new();
+            let cgu = tcx.codegen_unit(cgu_name);
+            let module = Module::new(target_tuples::Target::parse(&tcx.target_spec().llvm_target));
+            let cx = CodegenCx::new(tcx);
+
+            let mono_items = cgu.items_in_deterministic_order(tcx);
+
+            for &(mono_item, (linkage, visibility)) in &mono_items {
+                mono_item.predefine::<Builder>(&cx, linkage, visibility);
+            }
+
+            for &(mono_item, _) in &mono_items {
+                mono_item.define::<Builder>(&cx)
+            }
 
             ModuleCodegen {
                 name: cgu_name.to_string(),
@@ -131,7 +155,7 @@ impl ExtraBackendMethods for XLangCodegenBackend {
                 kind: ModuleKind::Regular,
             }
         }
-        (module, 0)
+        (module, 0x100)
     }
 
     fn target_machine_factory(
@@ -211,21 +235,12 @@ impl WriteBackendMethods for XLangCodegenBackend {
     ) -> Result<CompiledModule, FatalError> {
         let module_name = module.name.clone();
         let module_name = Some(&module_name[..]);
-        let obj_out = cgcx.output_filenames.temp_path(OutputType::Object, module_name);
+        let obj_out = cgcx
+            .output_filenames
+            .temp_path(OutputType::Object, module_name);
         let xlang_module = &mut module.module_llvm;
-        let root = ir::Scope {
-            annotations: ir::AnnotatedElement::default(),
-            members: AbiHashMap::default(),
-        };
-        let target: Target = target_tuples::Target::parse("x86_64-pc-linux-gnu").into();
-        let mut file = ir::File {
-            target: target.clone(),
-            root,
-        };
         match config.emit_obj {
             EmitObj::ObjectCode(_) => {
-                xlang_module.codegen.set_target(target);
-                xlang_module.codegen.accept_ir(&mut file);
                 xlang_module.write(File::create(obj_out).unwrap());
             }
             EmitObj::Bitcode => todo!(),
