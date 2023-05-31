@@ -14,17 +14,17 @@ use core::ops::Deref;
 
 use crate::{cx::CodegenCx, value::Value};
 
-pub struct Builder<'tcx> {
-    pub cx: CodegenCx<'tcx>,
+pub struct Builder<'tcx, 'xlang> {
+    pub cx: CodegenCx<'tcx, 'xlang>,
 }
 
-impl<'tcx> AbiBuilderMethods<'tcx> for Builder<'tcx> {
+impl<'tcx, 'xlang> AbiBuilderMethods<'tcx> for Builder<'tcx, 'xlang> {
     fn get_param(&mut self, index: usize) -> Self::Value {
         todo!()
     }
 }
 
-impl<'tcx> ArgAbiMethods<'tcx> for Builder<'tcx> {
+impl<'tcx, 'xlang> ArgAbiMethods<'tcx> for Builder<'tcx, 'xlang> {
     fn store_fn_arg(
         &mut self,
         arg_abi: &rustc_target::abi::call::ArgAbi<'tcx, rustc_middle::ty::Ty<'tcx>>,
@@ -51,7 +51,7 @@ impl<'tcx> ArgAbiMethods<'tcx> for Builder<'tcx> {
     }
 }
 
-impl<'tcx> AsmBuilderMethods<'tcx> for Builder<'tcx> {
+impl<'tcx, 'xlang> AsmBuilderMethods<'tcx> for Builder<'tcx, 'xlang> {
     fn codegen_inline_asm(
         &mut self,
         template: &[rustc_ast::InlineAsmTemplatePiece],
@@ -65,25 +65,25 @@ impl<'tcx> AsmBuilderMethods<'tcx> for Builder<'tcx> {
     }
 }
 
-impl<'tcx> BackendTypes for Builder<'tcx> {
-    type Value = <CodegenCx<'tcx> as BackendTypes>::Value;
+impl<'tcx, 'xlang> BackendTypes for Builder<'tcx, 'xlang> {
+    type Value = <CodegenCx<'tcx, 'xlang> as BackendTypes>::Value;
 
-    type Function = <CodegenCx<'tcx> as BackendTypes>::Function;
+    type Function = <CodegenCx<'tcx, 'xlang> as BackendTypes>::Function;
 
-    type BasicBlock = <CodegenCx<'tcx> as BackendTypes>::BasicBlock;
+    type BasicBlock = <CodegenCx<'tcx, 'xlang> as BackendTypes>::BasicBlock;
 
-    type Type = <CodegenCx<'tcx> as BackendTypes>::Type;
+    type Type = <CodegenCx<'tcx, 'xlang> as BackendTypes>::Type;
 
-    type Funclet = <CodegenCx<'tcx> as BackendTypes>::Funclet;
+    type Funclet = <CodegenCx<'tcx, 'xlang> as BackendTypes>::Funclet;
 
-    type DIScope = <CodegenCx<'tcx> as BackendTypes>::DIScope;
+    type DIScope = <CodegenCx<'tcx, 'xlang> as BackendTypes>::DIScope;
 
-    type DILocation = <CodegenCx<'tcx> as BackendTypes>::DILocation;
+    type DILocation = <CodegenCx<'tcx, 'xlang> as BackendTypes>::DILocation;
 
-    type DIVariable = <CodegenCx<'tcx> as BackendTypes>::DIVariable;
+    type DIVariable = <CodegenCx<'tcx, 'xlang> as BackendTypes>::DIVariable;
 }
 
-impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'tcx> {
+impl<'a, 'tcx, 'xlang> BuilderMethods<'a, 'tcx> for Builder<'tcx, 'xlang> {
     fn build(cx: &'a Self::CodegenCx, llbb: Self::BasicBlock) -> Self {
         todo!()
     }
@@ -154,15 +154,15 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'tcx> {
         todo!()
     }
 
-    fn add(&mut self, lhs: Value, rhs: Value) -> Value {
+    fn add(&mut self, lhs: Self::Value, rhs: Self::Value) -> Self::Value {
         todo!()
     }
 
-    fn fadd(&mut self, lhs: Value, rhs: Value) -> Value {
+    fn fadd(&mut self, lhs: Self::Value, rhs: Self::Value) -> Self::Value {
         todo!()
     }
 
-    fn fadd_fast(&mut self, lhs: Value, rhs: Value) -> Value {
+    fn fadd_fast(&mut self, lhs: Self::Value, rhs: Self::Value) -> Self::Value {
         todo!()
     }
 
@@ -651,7 +651,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'tcx> {
     }
 }
 
-impl<'tcx> CoverageInfoBuilderMethods<'tcx> for Builder<'tcx> {
+impl<'tcx, 'xlang> CoverageInfoBuilderMethods<'tcx> for Builder<'tcx, 'xlang> {
     fn set_function_source_hash(
         &mut self,
         instance: rustc_middle::ty::Instance<'tcx>,
@@ -690,7 +690,7 @@ impl<'tcx> CoverageInfoBuilderMethods<'tcx> for Builder<'tcx> {
     }
 }
 
-impl<'tcx> DebugInfoBuilderMethods for Builder<'tcx> {
+impl<'tcx, 'xlang> DebugInfoBuilderMethods for Builder<'tcx, 'xlang> {
     fn dbg_var_addr(
         &mut self,
         dbg_var: Self::DIVariable,
@@ -719,15 +719,15 @@ impl<'tcx> DebugInfoBuilderMethods for Builder<'tcx> {
     }
 }
 
-impl<'tcx> Deref for Builder<'tcx> {
-    type Target = CodegenCx<'tcx>;
+impl<'tcx, 'xlang> Deref for Builder<'tcx, 'xlang> {
+    type Target = CodegenCx<'tcx, 'xlang>;
 
     fn deref(&self) -> &Self::Target {
         &self.cx
     }
 }
 
-impl<'tcx> FnAbiOfHelpers<'tcx> for Builder<'tcx> {
+impl<'tcx, 'xlang> FnAbiOfHelpers<'tcx> for Builder<'tcx, 'xlang> {
     type FnAbiOfResult = &'tcx FnAbi<'tcx, Ty<'tcx>>;
 
     fn handle_fn_abi_err(
@@ -740,35 +740,35 @@ impl<'tcx> FnAbiOfHelpers<'tcx> for Builder<'tcx> {
     }
 }
 
-impl<'tcx> HasCodegen<'tcx> for Builder<'tcx> {
-    type CodegenCx = CodegenCx<'tcx>;
+impl<'tcx, 'xlang> HasCodegen<'tcx> for Builder<'tcx, 'xlang> {
+    type CodegenCx = CodegenCx<'tcx, 'xlang>;
 }
 
-impl<'tcx> HasDataLayout for Builder<'tcx> {
+impl<'tcx, 'xlang> HasDataLayout for Builder<'tcx, 'xlang> {
     fn data_layout(&self) -> &rustc_abi::TargetDataLayout {
         todo!()
     }
 }
 
-impl<'tcx> HasParamEnv<'tcx> for Builder<'tcx> {
+impl<'tcx, 'xlang> HasParamEnv<'tcx> for Builder<'tcx, 'xlang> {
     fn param_env(&self) -> rustc_middle::ty::ParamEnv<'tcx> {
         todo!()
     }
 }
 
-impl<'tcx> HasTargetSpec for Builder<'tcx> {
+impl<'tcx, 'xlang> HasTargetSpec for Builder<'tcx, 'xlang> {
     fn target_spec(&self) -> &rustc_target::spec::Target {
         todo!()
     }
 }
 
-impl<'tcx> HasTyCtxt<'tcx> for Builder<'tcx> {
+impl<'tcx, 'xlang> HasTyCtxt<'tcx> for Builder<'tcx, 'xlang> {
     fn tcx(&self) -> rustc_middle::ty::TyCtxt<'tcx> {
         todo!()
     }
 }
 
-impl<'tcx> IntrinsicCallMethods<'tcx> for Builder<'tcx> {
+impl<'tcx, 'xlang> IntrinsicCallMethods<'tcx> for Builder<'tcx, 'xlang> {
     fn codegen_intrinsic_call(
         &mut self,
         instance: rustc_middle::ty::Instance<'tcx>,
@@ -814,7 +814,7 @@ impl<'tcx> IntrinsicCallMethods<'tcx> for Builder<'tcx> {
     }
 }
 
-impl<'tcx> LayoutOfHelpers<'tcx> for Builder<'tcx> {
+impl<'tcx, 'xlang> LayoutOfHelpers<'tcx> for Builder<'tcx, 'xlang> {
     type LayoutOfResult = TyAndLayout<'tcx>;
 
     fn handle_layout_err(
@@ -827,7 +827,7 @@ impl<'tcx> LayoutOfHelpers<'tcx> for Builder<'tcx> {
     }
 }
 
-impl<'tcx> StaticBuilderMethods for Builder<'tcx> {
+impl<'tcx, 'xlang> StaticBuilderMethods for Builder<'tcx, 'xlang> {
     fn get_static(&mut self, def_id: rustc_hir::def_id::DefId) -> Self::Value {
         todo!()
     }

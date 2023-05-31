@@ -1,26 +1,45 @@
+use core::cell::RefCell;
+
 use rustc_abi::{HasDataLayout, TargetDataLayout};
-use rustc_ast::Param;
-use rustc_codegen_ssa::traits::{PreDefineMethods, BackendTypes, AsmMethods, DebugInfoMethods, CoverageInfoMethods, StaticMethods, ConstMethods, MiscMethods, TypeMembershipMethods, LayoutTypeMethods, BaseTypeMethods};
+use rustc_codegen_ssa::{traits::{PreDefineMethods, BackendTypes, AsmMethods, DebugInfoMethods, CoverageInfoMethods, StaticMethods, ConstMethods, MiscMethods, TypeMembershipMethods, LayoutTypeMethods, BaseTypeMethods}, common::TypeKind};
+use rustc_const_eval::interpret::{ConstAllocation, self};
+use rustc_hash::FxHashMap;
 use rustc_hir::def_id::DefId;
 use rustc_middle::{ty::{TyCtxt, layout::{FnAbiOfHelpers, LayoutOfHelpers, HasParamEnv, HasTyCtxt, TyAndLayout}, ParamEnv, Ty, Instance, self, TypeVisitableExt}, mir::mono::{Linkage, Visibility}};
-use rustc_target::{spec::{HasTargetSpec, Target}, abi::call::FnAbi};
+use rustc_target::{spec::{HasTargetSpec, Target}, abi::{call::FnAbi, self}};
 use xlang::ir;
+use xlang::abi::vec as abi_vec;
 
-use crate::value::Value;
+use crate::{value::Value, callee, module::Module};
 
-pub struct CodegenCx<'tcx> {
+pub struct CodegenCx<'tcx, 'xlang> {
+    module: Module,
     tcx: TyCtxt<'tcx>,
+    pub function_instances: RefCell<FxHashMap<Instance<'tcx>, Value<'xlang>>>,
+    pub declared_values: RefCell<FxHashMap<String, Value<'xlang>>>,
 }
 
-impl<'tcx> CodegenCx<'tcx> {
-    pub fn new(tcx: TyCtxt<'tcx>) -> Self {
+impl<'tcx, 'xlang> CodegenCx<'tcx, 'xlang> {
+    pub fn new(module: Module, tcx: TyCtxt<'tcx>) -> Self {
         Self {
-            tcx
+            module,
+            tcx,
+            function_instances: RefCell::default(),
+            declared_values: RefCell::default(),
         }
+    }
+
+    pub fn declare_global(&self, name: &str, ty: ir::Type) -> Value<'xlang> {
+        
+        self.module.file_mut().root.members.insert(ir::Path { components: abi_vec![ir::PathComponent::Root, ir::PathComponent::Text(name.into())] }, value);
+    }
+
+    pub fn get_declared_value(&self, name: &str) -> Option<Value<'xlang>> {
+        self.declared_values.borrow().get(name).copied()
     }
 }
 
-impl<'tcx> AsmMethods<'tcx> for CodegenCx<'tcx> {
+impl<'tcx, 'xlang> AsmMethods<'tcx> for CodegenCx<'tcx, 'xlang> {
     fn codegen_global_asm(
         &self,
         template: &[rustc_ast::InlineAsmTemplatePiece],
@@ -32,9 +51,9 @@ impl<'tcx> AsmMethods<'tcx> for CodegenCx<'tcx> {
     }
 }
 
-impl<'tcx> BackendTypes for CodegenCx<'tcx> {
-    type Value = Value;
-    type Function = ();
+impl<'tcx, 'xlang> BackendTypes for CodegenCx<'tcx, 'xlang> {
+    type Value = Value<'xlang>;
+    type Function = Value<'xlang>;
     type BasicBlock = ();
     type Type = ();
     type Funclet = ();
@@ -44,7 +63,7 @@ impl<'tcx> BackendTypes for CodegenCx<'tcx> {
     type DIVariable = ();
 }
 
-impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
+impl<'tcx, 'xlang> BaseTypeMethods<'tcx> for CodegenCx<'tcx, 'xlang> {
     fn type_i1(&self) -> Self::Type {
         todo!()
     }
@@ -93,7 +112,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
         todo!()
     }
 
-    fn type_kind(&self, ty: Self::Type) -> rustc_codegen_ssa::common::TypeKind {
+    fn type_kind(&self, ty: Self::Type) -> TypeKind {
         todo!()
     }
 
@@ -126,7 +145,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
     }
 }
 
-impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
+impl<'tcx, 'xlang> ConstMethods<'tcx> for CodegenCx<'tcx, 'xlang> {
     fn const_null(&self, t: Self::Type) -> Self::Value {
         todo!()
     }
@@ -187,23 +206,23 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
         todo!()
     }
 
-    fn const_struct(&self, elts: &[Self::Value], packed: bool) -> Self::Value {
+    fn const_struct(&self, elts: &[Value], packed: bool) -> Self::Value {
         todo!()
     }
 
-    fn const_to_opt_uint(&self, v: Self::Value) -> Option<u64> {
+    fn const_to_opt_uint(&self, v: Value) -> Option<u64> {
         todo!()
     }
 
-    fn const_to_opt_u128(&self, v: Self::Value, sign_ext: bool) -> Option<u128> {
+    fn const_to_opt_u128(&self, v: Value, sign_ext: bool) -> Option<u128> {
         todo!()
     }
 
-    fn const_data_from_alloc(&self, alloc: rustc_const_eval::interpret::ConstAllocation<'tcx>) -> Self::Value {
+    fn const_data_from_alloc(&self, alloc: ConstAllocation<'tcx>) -> Self::Value {
         todo!()
     }
 
-    fn scalar_to_backend(&self, cv: rustc_const_eval::interpret::Scalar, layout: rustc_target::abi::Scalar, llty: Self::Type) -> Self::Value {
+    fn scalar_to_backend(&self, cv: interpret::Scalar, layout: abi::Scalar, llty: Self::Type) -> Self::Value {
         todo!()
     }
 
@@ -221,7 +240,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
     }
 }
 
-impl<'tcx> CoverageInfoMethods<'tcx> for CodegenCx<'tcx> {
+impl<'tcx, 'xlang> CoverageInfoMethods<'tcx> for CodegenCx<'tcx, 'xlang> {
     fn coverageinfo_finalize(&self) {
         todo!()
     }
@@ -235,7 +254,7 @@ impl<'tcx> CoverageInfoMethods<'tcx> for CodegenCx<'tcx> {
     }
 }
 
-impl<'tcx> DebugInfoMethods<'tcx> for CodegenCx<'tcx> {
+impl<'tcx, 'xlang> DebugInfoMethods<'tcx> for CodegenCx<'tcx, 'xlang> {
     fn create_vtable_debuginfo(
         &self,
         ty: rustc_middle::ty::Ty<'tcx>,
@@ -297,7 +316,7 @@ impl<'tcx> DebugInfoMethods<'tcx> for CodegenCx<'tcx> {
     }
 }
 
-impl<'tcx> FnAbiOfHelpers<'tcx> for CodegenCx<'tcx> {
+impl<'tcx, 'xlang> FnAbiOfHelpers<'tcx> for CodegenCx<'tcx, 'xlang> {
     type FnAbiOfResult = &'tcx FnAbi<'tcx, Ty<'tcx>>;
 
     fn handle_fn_abi_err(
@@ -310,31 +329,31 @@ impl<'tcx> FnAbiOfHelpers<'tcx> for CodegenCx<'tcx> {
     }
 }
 
-impl<'tcx> HasDataLayout for CodegenCx<'tcx> {
+impl<'tcx, 'xlang> HasDataLayout for CodegenCx<'tcx, 'xlang> {
     fn data_layout(&self) -> &TargetDataLayout {
         &self.tcx.data_layout
     }
 }
 
-impl<'tcx> HasParamEnv<'tcx> for CodegenCx<'tcx> {
+impl<'tcx, 'xlang> HasParamEnv<'tcx> for CodegenCx<'tcx, 'xlang> {
     fn param_env(&self) -> ParamEnv<'tcx> {
         ParamEnv::reveal_all()
     }
 }
 
-impl<'tcx> HasTargetSpec for CodegenCx<'tcx> {
+impl<'tcx, 'xlang> HasTargetSpec for CodegenCx<'tcx, 'xlang> {
     fn target_spec(&self) -> &Target {
         &self.tcx.sess.target
     }
 }
 
-impl<'tcx> HasTyCtxt<'tcx> for CodegenCx<'tcx> {
+impl<'tcx, 'xlang> HasTyCtxt<'tcx> for CodegenCx<'tcx, 'xlang> {
     fn tcx(&self) -> TyCtxt<'tcx> {
         self.tcx
     }
 }
 
-impl<'tcx> LayoutOfHelpers<'tcx> for CodegenCx<'tcx> {
+impl<'tcx, 'xlang> LayoutOfHelpers<'tcx> for CodegenCx<'tcx, 'xlang> {
     type LayoutOfResult = TyAndLayout<'tcx>;
 
     fn handle_layout_err(
@@ -347,7 +366,7 @@ impl<'tcx> LayoutOfHelpers<'tcx> for CodegenCx<'tcx> {
     }
 }
 
-impl<'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'tcx> {
+impl<'tcx, 'xlang> LayoutTypeMethods<'tcx> for CodegenCx<'tcx, 'xlang> {
     fn backend_type(&self, layout: TyAndLayout<'tcx>) -> Self::Type {
         todo!()
     }
@@ -394,7 +413,7 @@ impl<'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'tcx> {
     }
 }
 
-impl<'tcx> MiscMethods<'tcx> for CodegenCx<'tcx> {
+impl<'tcx, 'xlang> MiscMethods<'tcx> for CodegenCx<'tcx, 'xlang> {
     fn vtables(
         &self,
     ) -> &std::cell::RefCell<rustc_hash::FxHashMap<(Ty<'tcx>, Option<rustc_middle::ty::PolyExistentialTraitRef<'tcx>>), Self::Value>> {
@@ -405,12 +424,12 @@ impl<'tcx> MiscMethods<'tcx> for CodegenCx<'tcx> {
         todo!()
     }
 
-    fn get_fn(&self, instance: Instance<'tcx>) -> Self::Function {
-        todo!()
+    fn get_fn(&self, instance: Instance<'tcx>) -> Self::Value {
+        callee::get_fn(self, instance)
     }
 
     fn get_fn_addr(&self, instance: rustc_middle::ty::Instance<'tcx>) -> Self::Value {
-        todo!()
+        self.get_fn(instance)
     }
 
     fn eh_personality(&self) -> Self::Value {
@@ -438,7 +457,7 @@ impl<'tcx> MiscMethods<'tcx> for CodegenCx<'tcx> {
     }
 }
 
-impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
+impl<'tcx, 'xlang> PreDefineMethods<'tcx> for CodegenCx<'tcx, 'xlang> {
     fn predefine_static(
         &self,
         def_id: DefId,
@@ -462,7 +481,7 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
     }
 }
 
-impl<'tcx> StaticMethods for CodegenCx<'tcx> {
+impl<'tcx, 'xlang> StaticMethods for CodegenCx<'tcx, 'xlang> {
     fn static_addr_of(&self, cv: Self::Value, align: rustc_abi::Align, kind: Option<&str>) -> Self::Value {
         todo!()
     }
@@ -480,7 +499,7 @@ impl<'tcx> StaticMethods for CodegenCx<'tcx> {
     }
 }
 
-impl<'tcx> TypeMembershipMethods<'tcx> for CodegenCx<'tcx> {
+impl<'tcx, 'xlang> TypeMembershipMethods<'tcx> for CodegenCx<'tcx, 'xlang> {
     fn set_type_metadata(&self, function: Self::Function, typeid: String) {
         todo!()
     }

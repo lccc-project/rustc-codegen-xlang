@@ -18,6 +18,7 @@ extern crate rustc_target;
 mod archive;
 mod buffers;
 mod builder;
+mod callee;
 mod cx;
 mod module;
 mod value;
@@ -137,7 +138,7 @@ impl ExtraBackendMethods for XLangCodegenBackend {
         fn module_codegen(tcx: TyCtxt<'_>, cgu_name: Symbol) -> ModuleCodegen<Module> {
             let cgu = tcx.codegen_unit(cgu_name);
             let module = Module::new(target_tuples::Target::parse(&tcx.target_spec().llvm_target));
-            let cx = CodegenCx::new(tcx);
+            let cx = CodegenCx::new(module, tcx);
 
             let mono_items = cgu.items_in_deterministic_order(tcx);
 

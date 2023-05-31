@@ -1,3 +1,4 @@
+use core::cell::{RefMut, RefCell};
 use std::io::Write;
 use std::sync::LazyLock;
 
@@ -26,9 +27,13 @@ static STATIC_DATA: LazyLock<StaticData> = LazyLock::new(|| StaticData {
     ],
 });
 
-pub struct Module {
+struct ModuleInner {
     codegen: DynBox<dyn XLangCodegen>,
-    file: ir::File,
+    pub file: ir::File,
+}
+
+pub struct Module {
+    inner: RefCell<ModuleInner>,
 }
 
 unsafe impl Send for Module {}
@@ -45,22 +50,29 @@ impl Module {
         let target = target.into();
         codegen.set_target(target.clone());
         Self {
-            codegen,
-            file: ir::File {
-                target,
-                root: ir::Scope {
-                    annotations: AnnotatedElement::default(),
-                    members: AbiHashMap::default(),
+            inner: RefCell::new(ModuleInner {
+                codegen,
+                file: ir::File {
+                    target,
+                    root: ir::Scope {
+                        annotations: AnnotatedElement::default(),
+                        members: AbiHashMap::default(),
+                    },
                 },
-            },
+            }),
         }
     }
 
     pub fn write(&mut self, x: impl Write + 'static) {
         let mut writer = WriteAdapter::new(x);
-        self.codegen.accept_ir(&mut self.file);
-        self.codegen
+        let inner = self.inner.get_mut();
+        inner.codegen.accept_ir(&mut inner.file);
+        inner.codegen
             .write_output(DynMut::unsize_mut(&mut writer), OutputMode::Obj)
             .unwrap();
+    }
+
+    pub fn file_mut(&self) -> RefMut<ir::File> {
+        RefMut::map(self.inner.borrow_mut(), |x| &mut x.file)
     }
 }
