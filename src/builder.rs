@@ -4,10 +4,10 @@ use rustc_codegen_ssa::traits::{
     CoverageInfoBuilderMethods, DebugInfoBuilderMethods, HasCodegen, IntrinsicCallMethods,
     StaticBuilderMethods,
 };
-use rustc_middle::ty::{
+use rustc_middle::{ty::{
     layout::{FnAbiOfHelpers, HasParamEnv, HasTyCtxt, LayoutOfHelpers, TyAndLayout},
     Ty,
-};
+}, middle::codegen_fn_attrs::CodegenFnAttrs};
 use rustc_target::{abi::call::FnAbi, spec::HasTargetSpec};
 
 use core::ops::Deref;
@@ -140,6 +140,7 @@ impl<'a, 'tcx, 'xlang> BuilderMethods<'a, 'tcx> for Builder<'tcx, 'xlang> {
     fn invoke(
         &mut self,
         llty: Self::Type,
+        fn_attrs: Option<&CodegenFnAttrs>,
         fn_abi: Option<&FnAbi<'tcx, rustc_middle::ty::Ty<'tcx>>>,
         llfn: Value,
         args: &[Value],
@@ -634,6 +635,7 @@ impl<'a, 'tcx, 'xlang> BuilderMethods<'a, 'tcx> for Builder<'tcx, 'xlang> {
     fn call(
         &mut self,
         llty: Self::Type,
+        fn_attrs: Option<&CodegenFnAttrs>,
         fn_abi: Option<&rustc_target::abi::call::FnAbi<'tcx, rustc_middle::ty::Ty<'tcx>>>,
         llfn: Self::Value,
         args: &[Self::Value],
@@ -647,6 +649,10 @@ impl<'a, 'tcx, 'xlang> BuilderMethods<'a, 'tcx> for Builder<'tcx, 'xlang> {
     }
 
     fn do_not_inline(&mut self, llret: Self::Value) {
+        todo!()
+    }
+
+    fn filter_landing_pad(&mut self, pers_fn: Self::Value) -> (Self::Value, Self::Value) {
         todo!()
     }
 }

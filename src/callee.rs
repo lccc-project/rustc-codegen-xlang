@@ -4,7 +4,7 @@ use crate::{cx::CodegenCx, value::Value};
 
 pub fn get_fn<'tcx, 'xlang>(cx: &CodegenCx<'tcx, 'xlang>, instance: Instance<'tcx>) -> Value<'xlang> {
     let tcx = cx.tcx();
-    assert!(!instance.substs.needs_infer());
+    // assert!(!instance.substs.needs_infer());
     assert!(!instance.substs.has_escaping_bound_vars());
 
     if let Some(&func) = cx.function_instances.borrow().get(&instance) {
