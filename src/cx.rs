@@ -250,16 +250,15 @@ impl<'tcx, 'xlang> ConstMethods<'tcx> for CodegenCx<'tcx, 'xlang> {
         todo!()
     }
 
-    fn from_const_alloc(
-        &self,
-        layout: rustc_middle::ty::layout::TyAndLayout<'tcx>,
-        alloc: rustc_const_eval::interpret::ConstAllocation<'tcx>,
-        offset: rustc_abi::Size,
-    ) -> rustc_codegen_ssa::mir::place::PlaceRef<'tcx, Self::Value> {
+    fn const_ptrcast(&self, val: Self::Value, ty: Self::Type) -> Self::Value {
         todo!()
     }
 
-    fn const_ptrcast(&self, val: Self::Value, ty: Self::Type) -> Self::Value {
+    fn const_bitcast(&self, val: Self::Value, ty: Self::Type) -> Self::Value {
+        todo!()
+    }
+
+    fn const_ptr_byte_offset(&self, val: Self::Value, offset: abi::Size) -> Self::Value {
         todo!()
     }
 }
